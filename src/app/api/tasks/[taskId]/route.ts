@@ -36,3 +36,18 @@ export async function PUT(req: Request, context: contextProps) {
     );
   }
 }
+
+export const GET = async (req: Request, context: contextProps) => {
+  try {
+    const { params } = context;
+    const task = await db.task.findUnique({
+      where: { id: Number(params.taskId) },
+    });
+    return NextResponse.json(task, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      { message: "Could not find task" },
+      { status: 500 }
+    );
+  }
+};

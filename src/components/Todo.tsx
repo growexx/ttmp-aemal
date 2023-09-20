@@ -1,25 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Task, PrismaClient } from "@prisma/client";
-import {
-  Box,
-  Button,
-  Input,
-  List,
-  ListItem,
-  ListItemText,
-  Modal,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Task } from "@prisma/client";
+import { Button } from "@mui/material";
 import styled from "@emotion/styled";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
 
-interface TodoProps {
-  prisma: PrismaClient;
-}
+import TaskList from "./TaskList";
+import { IModalProps, ITodoProps } from "@/interface/Todo";
+import DeleteTask from "./DeleteTask";
+import EditTask from "./EditTask";
+import AddTask from "./AddTask";
 
 const style = {
   position: "absolute",
@@ -43,13 +33,6 @@ const CenteredContainer = styled.div`
   padding: 16px;
 `;
 
-const TaskList = styled(List)`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-`;
-
 const StyledButton = styled(Button)`
   margin-top: 16px;
 `;
@@ -62,41 +45,33 @@ const TaskWrapper = styled.div`
   width: 400px;
 `;
 
-interface ModalProps {
-  open: boolean;
-  task: {
-    id: number | null;
-    title: string | null;
-  };
-}
-
-const Todo: React.FC<TodoProps> = ({ prisma }) => {
+const Todo: React.FC<ITodoProps> = ({ prisma }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState<string>("");
   const [newTaskError, setNewTaskError] = useState<boolean>(false);
-  const [editModalProps, setEditModalProps] = useState<ModalProps>({
+  const [editModalProps, setEditModalProps] = useState<IModalProps>({
     open: false,
     task: {
       id: null,
       title: null,
     },
   });
-  const [deleteModalProps, setDeleteModalProps] = useState<ModalProps>({
+  const [deleteModalProps, setDeleteModalProps] = useState<IModalProps>({
     open: false,
     task: {
       id: null,
       title: null,
     },
   });
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
 
   const fetchTasks = async () => {
     const fetchedTasks = await fetch("/api/tasks").then((res) => res.json());
     setTasks(fetchedTasks);
   };
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
 
   const addTask = async () => {
     if (newTask.trim() === "") {
@@ -159,112 +134,46 @@ const Todo: React.FC<TodoProps> = ({ prisma }) => {
       },
     });
 
+  const handleChangeEditModalProps = (task: IModalProps) => {
+    setEditModalProps(task);
+  };
+
+  const handleChangeDeleteModalProps = (task: IModalProps) => {
+    setDeleteModalProps(task);
+  };
+
+  const handleChangeNewTask = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewTaskError(false);
+    setNewTask(e.target.value);
+  };
+
   return (
     <>
-      <Modal open={deleteModalProps.open} onClose={() => handleDeleteClose()}>
-        <Box sx={style}>
-          <Typography variant="h6" component="h2" mb={5}>
-            Delete Task
-          </Typography>
-          <Typography variant="body1" component="p" mb={4}>
-            Are you sure you want to delete this task?
-          </Typography>
+      <DeleteTask
+        deleteModalProps={deleteModalProps}
+        handleDeleteClose={handleDeleteClose}
+        deleteTask={deleteTask}
+      />
 
-          <Box display="flex" justifyContent="space-between">
-            <Button variant="contained" onClick={() => handleDeleteClose()}>
-              Cancel
-            </Button>
-            <Box ml={1}>
-              <Button variant="contained" onClick={() => deleteTask()}>
-                Submit
-              </Button>
-            </Box>
-          </Box>
-        </Box>
-      </Modal>
-
-      <Modal open={editModalProps.open} onClose={handleClose}>
-        <Box sx={style}>
-          <Typography variant="h6" component="h2" mb={5}>
-            Edit Task
-          </Typography>
-          <TextField
-            autoFocus
-            variant="outlined"
-            value={editModalProps.task?.title}
-            onChange={(e) => {
-              setEditModalProps({
-                ...editModalProps,
-                task: {
-                  ...editModalProps.task,
-                  title: e.target.value,
-                },
-              });
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") editTask();
-            }}
-            error={editModalProps.task?.title?.trim() === ""}
-            helperText={
-              editModalProps.task?.title?.trim() === ""
-                ? "Please Enter valid task"
-                : ""
-            }
-          />
-          <Box mt={5} display="flex" justifyContent="space-between">
-            <Button variant="contained" onClick={() => handleClose()}>
-              Cancel
-            </Button>
-            <Box ml={1}>
-              <Button variant="contained" onClick={() => editTask()}>
-                Submit
-              </Button>
-            </Box>
-          </Box>
-        </Box>
-      </Modal>
+      <EditTask
+        editModalProps={editModalProps}
+        handleClose={handleClose}
+        editTask={editTask}
+        handleChangeEditModalProps={handleChangeEditModalProps}
+      />
 
       <CenteredContainer>
-        <h1>To-Do App</h1>
-        <TextField
-          type="text"
-          placeholder="Add a new task..."
-          value={newTask}
-          onChange={(e) => {
-            setNewTaskError(false);
-            setNewTask(e.target.value);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") addTask();
-          }}
-          error={newTaskError}
-          helperText={newTaskError ? "Please Enter valid task" : ""}
+        <AddTask
+          handleChangeNewTask={handleChangeNewTask}
+          newTask={newTask}
+          addTask={addTask}
+          newTaskError={newTaskError}
         />
-        <StyledButton variant="contained" onClick={addTask} color="primary">
-          Add Task
-        </StyledButton>
-        <TaskList>
-          {tasks.map((task) => (
-            <TaskWrapper key={task.id}>
-              <ListItem>
-                <ListItemText primary={task.title} />
-              </ListItem>
-              <EditIcon
-                onClick={() =>
-                  setEditModalProps({
-                    open: true,
-                    task: task,
-                  })
-                }
-                style={{ cursor: "pointer" }}
-              />
-              <DeleteIcon
-                onClick={() => setDeleteModalProps({ open: true, task: task })}
-                style={{ cursor: "pointer" }}
-              />
-            </TaskWrapper>
-          ))}
-        </TaskList>
+        <TaskList
+          tasks={tasks}
+          handleChangeEditModalProps={handleChangeEditModalProps}
+          handleChangeDeleteModalProps={handleChangeDeleteModalProps}
+        />
       </CenteredContainer>
     </>
   );
