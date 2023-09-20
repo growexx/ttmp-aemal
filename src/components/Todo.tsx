@@ -164,9 +164,16 @@ const Todo: React.FC<TodoProps> = ({ prisma }) => {
           <Typography variant="body1" component="p" mb={4}>
             Are you sure you want to delete this task?
           </Typography>
-          <Box>
-            <Button onClick={() => handleDeleteClose()}>No</Button>
-            <Button onClick={() => deleteTask()}>Yes</Button>
+
+          <Box display="flex" justifyContent="space-between">
+            <Button variant="contained" onClick={() => handleDeleteClose()}>
+              Cancel
+            </Button>
+            <Box ml={1}>
+              <Button variant="contained" onClick={() => deleteTask()}>
+                Submit
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Modal>
@@ -193,9 +200,15 @@ const Todo: React.FC<TodoProps> = ({ prisma }) => {
               if (e.key === "Enter") editTask();
             }}
           />
-          <Box mt={5}>
-            <Button onClick={() => handleClose()}>Cancel</Button>
-            <Button onClick={() => editTask()}>Submit</Button>
+          <Box mt={5} display="flex" justifyContent="space-between">
+            <Button variant="contained" onClick={() => handleClose()}>
+              Cancel
+            </Button>
+            <Box ml={1}>
+              <Button variant="contained" onClick={() => editTask()}>
+                Submit
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Modal>
