@@ -73,6 +73,7 @@ interface ModalProps {
 const Todo: React.FC<TodoProps> = ({ prisma }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState<string>("");
+  const [newTaskError, setNewTaskError] = useState<boolean>(false);
   const [editModalProps, setEditModalProps] = useState<ModalProps>({
     open: false,
     task: {
@@ -98,7 +99,10 @@ const Todo: React.FC<TodoProps> = ({ prisma }) => {
   }, []);
 
   const addTask = async () => {
-    if (newTask.trim() === "") return;
+    if (newTask.trim() === "") {
+      setNewTaskError(true);
+      return;
+    }
     await fetch("/api/tasks", {
       method: "POST",
       body: JSON.stringify({ title: newTask }),
@@ -122,6 +126,7 @@ const Todo: React.FC<TodoProps> = ({ prisma }) => {
   };
 
   const editTask = async () => {
+    if (editModalProps?.task?.title?.trim() === "") return;
     await fetch(`/api/tasks/${editModalProps.task.id}`, {
       method: "PUT",
       body: JSON.stringify({ title: editModalProps.task.title }),
@@ -199,6 +204,12 @@ const Todo: React.FC<TodoProps> = ({ prisma }) => {
             onKeyDown={(e) => {
               if (e.key === "Enter") editTask();
             }}
+            error={editModalProps.task?.title?.trim() === ""}
+            helperText={
+              editModalProps.task?.title?.trim() === ""
+                ? "Please Enter valid task"
+                : ""
+            }
           />
           <Box mt={5} display="flex" justifyContent="space-between">
             <Button variant="contained" onClick={() => handleClose()}>
@@ -215,14 +226,19 @@ const Todo: React.FC<TodoProps> = ({ prisma }) => {
 
       <CenteredContainer>
         <h1>To-Do App</h1>
-        <Input
+        <TextField
           type="text"
           placeholder="Add a new task..."
           value={newTask}
-          onChange={(e) => setNewTask(e.target.value)}
+          onChange={(e) => {
+            setNewTaskError(false);
+            setNewTask(e.target.value);
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter") addTask();
           }}
+          error={newTaskError}
+          helperText={newTaskError ? "Please Enter valid task" : ""}
         />
         <StyledButton variant="contained" onClick={addTask} color="primary">
           Add Task
