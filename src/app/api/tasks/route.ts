@@ -6,6 +6,7 @@ export async function GET() {
     const tasks = await db.task.findMany();
     return NextResponse.json(tasks, { status: 200 });
   } catch (error) {
+    console.log({error})
     return NextResponse.json(
       { message: "Could not fetch task" },
       { status: 500 }

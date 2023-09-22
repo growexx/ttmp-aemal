@@ -32,7 +32,7 @@ const TasksList: React.FC<ITaskListProps> = ({
 
   return (
     <TaskList>
-      {tasks.map((task) => (
+      {tasks && tasks.length > 0 && tasks.map((task) => (
         <TaskWrapper key={task.id}>
           <ListItem>
             <ListItemText primary={task.title} />
